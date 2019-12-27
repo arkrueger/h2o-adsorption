@@ -10,7 +10,8 @@ Key Concepts:
 '''
 
 ### Background:
-'''This program uses a finite difference method to solve two linked partial differential equations describing the gas 
+'''
+This program uses a finite difference method to solve two linked partial differential equations describing the gas 
 phase (diffusion) and solid phase (adsorption) behavior.
 
 Equation 1: dG/dtau = -dG/dZ - kappa*(G - S)
