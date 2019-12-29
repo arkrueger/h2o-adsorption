@@ -17,6 +17,15 @@ phase (diffusion) and solid phase (adsorption) behavior.
 Equation 1: dG/dtau = -dG/dZ - kappa*(G - S)
 Equation 2: dS/dtau = psi*kappa*(G - S)
 
+Equations 1 and 2 are in a dimensionless form, scaled such that tau and Z take on values between 0 and 1. This is 
+critical to the stability of the finite difference. 
+
+The dimensionless term tau is defined as:
+tau === t*N_a/(porosity*C*V)
+Where t = time, N_a = gas molar flowrate, porosity = silica porosity, C = molar gas concentration from gas law (PV=nRT)
+    V = silica bed volume
+
+
 '''
 import numpy as np
 import pandas as pd
@@ -27,11 +36,25 @@ import pandas as pd
 configs = ['HFC', 'HFN', 'LFC', 'LFN']
 trials = ['1', '2', '3']
 
-# Reading these in as pandas DataFrames and storing each as an object element in a list.
-# This method is better suited than MultiIndex, xarray, or 3D numpy array because the matrices have varying dimensions.
-s_matrices = [[pd.read_csv('Resources\\'+configs[k]+trials[i]+'.csv') for i in range(0,3)] for k in range(0,4)]
+# Reading these in as ndarrays and storing each as an object element in a list. This method is better suited than
+# pandas MultiIndex, xarray, or 3D numpy array because the matrices have varying dimensions.
+# Rows: configurations (x4)      Cols: trials (x3)
+s_matrices = [[np.genfromtxt('Resources\\'+configs[k]+trials[i]+'.csv', delimiter=",") for i in range(0,3)] for k in range(0,4)]
 
+### Setting up variables for physical quantities.
+porosity = 0.74
 
+# Bed Height and Volume
+# Follows the same order as the trials array below.
+# All heights, diameters, and volumes are on a meter basis.
+bedHeight   = np.array([5.30, 5.30, 5.70, 5.90, 5.50, 5.00, 4.40, 5.30, 4.80, 5.80, 5.70, 5.10])*1E-2
+bedVolume   = np.array([0.000001896593738, 0.000001896593738, 0.000002039732888, 0.000002000201035, 0.000001864594185, 0.000001695085623, 0.000001500770909, 0.000001807746776, 0.000001637204628, 0.000001848407641, 0.000001816538544, 0.00000162532396])
+bedDiameter = np.array([6.75, 6.75, 6.75, 6.75, 6.57, 6.57, 6.59, 6.59, 6.59, 6.37, 6.37, 6.37])/1000 # meters
+flowrate    = np.array([6.2, 6.6, 7.2, 6.0, 6.3, 6.7, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0])/6E4 # m^3 / s
+R = 8.206E-5 # m3*atm*K&^-1?mol^-1
+T = 273.15+24 # Kelvin, assumed constant
+# tauFactor is used to convert time to the dimensionless tau
+tauFactor = np.divide(flowrate,np.multiply(porosity,bedVolume))
 
 
 
