@@ -33,13 +33,14 @@ import pandas as pd
 ### Reading the data in.
 # The experiment consists of four configurations, each conducted with trials in triplicate.
 # HF = high flow, LF = low flow, C = with cooling jacket, N = no cooling jacket, 1/2/3 = trial number
+# For each trial, there is a .csv (2-D) that contains
 configs = ['HFC', 'HFN', 'LFC', 'LFN']
 trials = ['1', '2', '3']
 
 # Reading these in as ndarrays and storing each as an object element in a list. This method is better suited than
 # pandas MultiIndex, xarray, or 3D numpy array because the matrices have varying dimensions.
 # Rows: configurations (x4)      Cols: trials (x3)
-s_matrices = [[np.genfromtxt('Resources\\'+configs[k]+trials[i]+'.csv', delimiter=",") for i in range(0,3)] for k in range(0,4)]
+S_matrices = [[np.genfromtxt('Resources\\'+configs[k]+trials[i]+'.csv', delimiter=",") for i in range(0,3)] for k in range(0,4)]
 
 ### Setting up variables for physical quantities.
 porosity = 0.74
@@ -47,16 +48,56 @@ porosity = 0.74
 # Bed Height and Volume
 # Follows the same order as the trials array below.
 # All heights, diameters, and volumes are on a meter basis.
-bedHeight   = np.array([5.30, 5.30, 5.70, 5.90, 5.50, 5.00, 4.40, 5.30, 4.80, 5.80, 5.70, 5.10])*1E-2
-bedVolume   = np.array([0.000001896593738, 0.000001896593738, 0.000002039732888, 0.000002000201035, 0.000001864594185, 0.000001695085623, 0.000001500770909, 0.000001807746776, 0.000001637204628, 0.000001848407641, 0.000001816538544, 0.00000162532396])
-bedDiameter = np.array([6.75, 6.75, 6.75, 6.75, 6.57, 6.57, 6.59, 6.59, 6.59, 6.37, 6.37, 6.37])/1000 # meters
-flowrate    = np.array([6.2, 6.6, 7.2, 6.0, 6.3, 6.7, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0])/6E4 # m^3 / s
+bed_height      = np.array([5.30, 5.30, 5.70, 5.90, 5.50, 5.00, 4.40, 5.30, 4.80, 5.80, 5.70, 5.10])*1E-2
+bed_volume      = np.array([0.000001896593738, 0.000001896593738, 0.000002039732888, 0.000002000201035, 0.000001864594185, 0.000001695085623, 0.000001500770909, 0.000001807746776, 0.000001637204628, 0.000001848407641, 0.000001816538544, 0.00000162532396])
+bed_diameter    = np.array([6.75, 6.75, 6.75, 6.75, 6.57, 6.57, 6.59, 6.59, 6.59, 6.37, 6.37, 6.37])/1000 # meters
+flowrate        = np.array([6.2, 6.6, 7.2, 6.0, 6.3, 6.7, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0])/6E4 # m^3 / s
 R = 8.206E-5 # m3*atm*K&^-1?mol^-1
 T = 273.15+24 # Kelvin, assumed constant
 # tauFactor is used to convert time to the dimensionless tau
-tauFactor = np.divide(flowrate,np.multiply(porosity,bedVolume))
+tau_factor = np.divide(flowrate, np.multiply(porosity, bed_volume))
+
+# Getting tau ranges for each trial in case we want them again for plotting.
+tau_range    = []
+mean_Z       = [] # using capital Z to denote dimensionless scaled values
+
+# Extracting Psi values.
+psi = np.zeros((1, 12))
+i = 1
+for n in range(4):
+    mean_Z.append([])
+    tau_range.append([])
+    for k in range(3):
+        mean_Z[n].append(configs[n]+trials[k]) # placeholder, use the one commented out on the next line
+        # meanZ[n].append(find_mean_z(arguments: relevant S matrix, tau factor, saturation to be considered e.g. 50, show graphs))
+        tau_range[n].append(np.arange(1, len(S_matrices[k][n][:, 0])*16*tau_factor(i), tau_factor(i)*15))
+        # populate the corresponding loc in meanZ
+        # with the Z array
+        # the Z array is a 1D array (axis=time) where each element contains the average Z-value along the silica column
+        # that corresponds to 50% saturation at that time step
+        # here the mean Z-value is determined by taking the mean value of the Z-values observed where
+        # S = 50%, within a small threshold
+
+#         meanZ{i} = MOD_extract_z(sCellMatrix{k,n},tauFactor(i),50,1);
+#         tauRange(i) = {1:15*tauFactor(i):(length(sCellMatrix{k,n}(:,1)).*15.*tauFactor(i))};
+#         % Clean out the NaN values from the meanZ array and augment the
+#         % tauRange to reflect this, store in new arrays.
+#         cleanMeanZMachine = [];
+#         cleanMeanTauRange = [];
+#         for x = 1:length(meanZ{i})
+#             if ~isnan(meanZ{i}(x))
+#                 cleanMeanZMachine = [cleanMeanZMachine, meanZ{i}(x)];
+#                 cleanMeanTauRange = [cleanMeanTauRange, tauRange{i}(x)];
+#             end
+#         end
 
 
+#         fit = polyfit(cleanMeanTauRange, cleanMeanZMachine, 1);
+#         psi(i) = fit(1);
+#         i = i+1;
+#     end
+# end
+# i = 1;
 
 
 
