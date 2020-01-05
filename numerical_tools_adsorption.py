@@ -52,8 +52,8 @@ def find_mean_Z(S_matrix, saturation, show_graphs=0):
     # For the graphing, keep the non-dimensional scaled Z
     # BUT just use frames or minutes for the time axis because it communicates what is happening more clearly than
     # tau does
-    if show_graphs == 1:
-        print('test')
+    # if show_graphs == 1:
+        # print('test')
         # do graphing
 
     # TODO consider having an if statement that toggles between the long way to get mean_Z and the concise one
