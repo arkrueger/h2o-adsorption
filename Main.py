@@ -76,18 +76,30 @@ data = {names[i]: {k: globals()[k][i] for k in attribute_keys} for i in range(0,
 # Populate the dict with the S matrices from the resource files.
 for trial in data:
     data[trial]['S_matrix'] = np.genfromtxt('Resources\\' + trial + '.csv', delimiter=",")
+    data[trial]['porosity'] = porosity
 
-### Getting tau ranges for each trial in case we want them again for plotting.
+### Analysis
 # Extracting psi values.
-# psi = np.full((4, 3), -1.0)
-# i = 1
-for trial in data:
-    # find_mean_Z to get the average Z position at each time step where saturation was 50%.
+for i in data:
+    # Temporary reference to the current trial to make code more readable.
+    trial = data[i]
+    # Initialize the time axis (tau) - used for graphing and curve fitting.
+    num_of_frames = len(trial['S_matrix'][:, 0])
+    trial['tau_range'] = np.linspace(0.0, num_of_frames * delta_t * trial['tau_factor'], num_of_frames)
+
+    # find_mean_Z to get the average Z position at each time step where saturation was 50% (call this Z_50).
     # (Capital Z denotes the dimensionless scaled value, as opposed to lowercase z, which is pixels.)
-    data[trial]['Z_50'] = nta.find_mean_Z(data[trial]['S_matrix'], 0.5, 1)
-    num_of_frames = len(data[trial]['S_matrix'][:, 0])
-    data[trial]['tau_range'] = np.linspace(0.0, num_of_frames * delta_t * data[trial]['tau_factor'], num_of_frames)
+    trial['Z_50'] = nta.find_mean_Z(trial, 0.5, show_graphs=1)
+
     # psi is the slope of Z_50 vs. tau, so find a linear fit using only the finite values (there are typically NaNs).
-    idx = np.isfinite(data[trial]['Z_50'])
-    data[trial]['psi'] = np.polyfit(data[trial]['tau_range'][idx], data[trial]['Z_50'][idx], 1)[0]
+    idx = np.isfinite(trial['Z_50'])
+    trial['psi'] = np.polyfit(trial['tau_range'][idx], trial['Z_50'][idx], 1)[0]
+    # While we're at it, let's collect the Z_35 and Z_65.
+    trial['Z_35'] = nta.find_mean_Z(trial, 0.35, show_graphs=0)
+    trial['Z_65'] = nta.find_mean_Z(trial, 0.65, show_graphs=0)
+
+# This could all be lumped into a single loop. Here I'm breaking it up into two loops in the interest of displaying
+# similar graphs together.
+
+
 

@@ -29,10 +29,8 @@ at each time point. The second set (count: one) shows all points on axes Z vs. t
 '''
 
 
-# noinspection PyPep8Naming
-def find_mean_Z(S_matrix, saturation, show_graphs=0):
-    # S_matrix is the S matrix from a single trial of a given configuration
-    # tau_factor is used to convert time to the dimensionless tau
+def find_mean_Z(trial, saturation, show_graphs=0):
+    # trial is the dict corresponding to a single trial
     # saturation is the value of S at which the value of Z is averaged
     # show_graphs toggles the graphing feature (1 means show, 0 means hide)
 
@@ -40,6 +38,8 @@ def find_mean_Z(S_matrix, saturation, show_graphs=0):
     # mean_Z, An array containing a series of Z-values (length: number of time points of given trial)
     # fit, an array containing the polynomial coefficients from the (linear) fit made to the Z vs. tau plot
 
+    # We're not editing the S_matrix, so we can give it a new name for code readability.
+    S_matrix = trial['S_matrix']
     tolerance = 0.01  # No values will be exactly at the specified saturation; this is the +/- tolerance range
     # For each row (time step) find the indices whose elements satisfy the condition of being close to the specified
     # saturation level and take the mean of those indices. Divide by the length of that dimension to normalize.
@@ -53,12 +53,81 @@ def find_mean_Z(S_matrix, saturation, show_graphs=0):
     # BUT just use frames or minutes for the time axis because it communicates what is happening more clearly than
     # tau does
     # if show_graphs == 1:
-        # print('test')
-        # do graphing
+    # print('test')
+    # do graphing
 
     # TODO consider having an if statement that toggles between the long way to get mean_Z and the concise one
     #  depending if show_graphs is selected
 
     return mean_Z
+
+
+'''
+function finite_difference
+This function...
+
+Big picture:
+This function...
+
+Visualization:
+None
+'''
+
+
+def finite_difference(trial, kappa):
+    # Note: The kappa parameter and the kappa attribute inside the trial dict are not necessarily (and are often not)
+    # the same value. The kappa parameter on its own is a "guess" typically supplied by the nonlinear regression
+    # function, and varies until the regression converges on the final kappa value. The kappa attribute in the trial
+    # dict is assigned this final kappa value after the regression is complete. Within the finite_difference function,
+    # the attribute is NOT used.
+
+    # Finite Difference Algorithm
+    # The initial and boundary conditions require a finite difference scheme as follows:
+    # Forward difference with respect to S (saturation)
+    # Backward difference with respect to tau (time)
+    # Central difference with respect to Z (position)
+
+    # For numerical stability, the finite difference method needs smaller time and position steps than the sampling
+    # rate of the actual experiment.
+    num_of_frames = len(trial['S_matrix'][:, 0])  # number of images collected in the actual experiment
+
+    time_step = 1.0  # seconds - this is the "real" time increment used for the finite difference scheme
+    tau_step = time_step * trial['tau_factor']
+    Z_step = 0.01  # Nothing fancy went on to arrive at this number - it's simply small enough for numerical stability
+
+    psi = trial['psi']
+
+    tau_dim = (num_of_frames - 1) * 15 + 1
+    Z_dim = int(1/Z_step)
+    # Initialize the matrix to be populated by the finite difference scheme.
+    S_matrix_fd = np.zeros((tau_dim, Z_dim))
+    G_matrix_fd = np.copy(S_matrix_fd)
+
+    G_matrix_fd[:, 0] = 1
+    for k in range(Z_dim):
+        for i in range(1, tau_dim):
+            # Finite difference index mappings. Not really necessary except for i_S but renaming them helps keep the
+            # math clear.
+            i_S = i - 1  # forward difference, unknown is ahead of the local i-index
+            k_S = k
+            i_G = i
+            k_G = k
+
+            S_matrix_fd[i_S + 1, k_S] = S_matrix_fd[i_S, k_S] + tau_step * psi * kappa * (
+                        G_matrix_fd[i_S, k_S] - S_matrix_fd[i_S, k_S])
+            # Fill the G matrix starting with the second column because the first column is solid 1's according to the
+            # boundary conditions.
+            if k >= 1:
+                G_matrix_fd[i_G, k_G] = (1 / (tau_step + Z_step)) * (
+                        Z_step * G_matrix_fd[i_G - 1, k_G] + tau_step * G_matrix_fd[i_G, k_G - 1] - tau_step * Z_step *
+                        kappa * (G_matrix_fd[i_G - 1, k_G] - S_matrix_fd[i_G - 1, k_G]))
+
+    # (The G matrix is not used for anything except the construction of the S matrix by finite difference.)
+    # Decimate the S_matrix to the time sample rate of the original experiment. We only care about the time points
+    # so it's okay that the resolution in the Z-dimension is different between the experimental and finite difference
+    # matrices.
+    S_matrix_fd = S_matrix_fd[0:tau_dim:15, :]
+    return S_matrix_fd, tau_dim
+
 
 
