@@ -145,8 +145,6 @@ None
 
 
 def fit_kappa(trial, kappa_init_guess, show_graphs):
-    import itertools
-
     # To do the nonlinear regression, we pass a function to scipy.optimize.fmin and ask it to minimize the output.
     # calculate_sum_of_squared_residuals computes a numerical score that tells how well the generated S matrix fits the
     # experimental S matrix by comparing the Z values at three saturation levels (35%, 50%, and 65%).
@@ -187,20 +185,10 @@ def fit_kappa(trial, kappa_init_guess, show_graphs):
             # Square the difference between corresponding elements and compute the sum.
             sum_of_squared_residuals += sum(np.square(temp_Z - temp_Z_guess))
 
-        # for Z_sat, Z_sat_guess in itertools.zip([trial['Z_35'], trial['Z_50'], trial['Z_65']], [trial_guess['Z_35_guess'], trial_guess['Z_50_guess'], trial_guess['Z_65_guess']]):
-        #     for exp, guess in itertools.zip(Z_sat, Z_sat_guess):
-
-        # sum_of_squared_residuals = 1  # finite_difference(trial, kappa_guess)
         return sum_of_squared_residuals
 
     # Find the kappa by nonlinear regression.
     f = lambda k: calculate_sum_of_squared_residuals(trial, k, show_graphs)
-    # def f(k, *args):
-    #     # args[0] should be the trial dict
-    #     # args[1] should be show_graphs
-    #     return calculate_sum_of_squared_residuals(args[0], k, args[1])
-    kappa_fit = sc.optimize.fmin(func=f, x0=kappa_init_guess)#, args=(trial, show_graphs))
-    # kappa_fit = sc.optimize.fmin(func=calculate_sum_of_squared_residuals(trial, k, show_graphs), x0=kappa_init_guess)
-    # kappa_fit = calculate_sum_of_squared_residuals(trial, kappa_init_guess, show_graphs)
-    # kappa_fit = f(3, trial, 0)
+    kappa_fit = sc.optimize.fmin(func=f, x0=kappa_init_guess)
+
     return kappa_fit
