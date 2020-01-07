@@ -1,4 +1,6 @@
 import numpy as np
+import scipy as sc
+import scipy.optimize
 
 '''
 function find_mean_Z
@@ -98,7 +100,7 @@ def finite_difference(trial, kappa):
     psi = trial['psi']
 
     tau_dim = (num_of_frames - 1) * 15 + 1
-    Z_dim = int(1/Z_step)
+    Z_dim = int(1 / Z_step)
     # Initialize the matrix to be populated by the finite difference scheme.
     S_matrix_fd = np.zeros((tau_dim, Z_dim))
     G_matrix_fd = np.copy(S_matrix_fd)
@@ -114,7 +116,7 @@ def finite_difference(trial, kappa):
             k_G = k
 
             S_matrix_fd[i_S + 1, k_S] = S_matrix_fd[i_S, k_S] + tau_step * psi * kappa * (
-                        G_matrix_fd[i_S, k_S] - S_matrix_fd[i_S, k_S])
+                    G_matrix_fd[i_S, k_S] - S_matrix_fd[i_S, k_S])
             # Fill the G matrix starting with the second column because the first column is solid 1's according to the
             # boundary conditions.
             if k >= 1:
@@ -127,7 +129,78 @@ def finite_difference(trial, kappa):
     # so it's okay that the resolution in the Z-dimension is different between the experimental and finite difference
     # matrices.
     S_matrix_fd = S_matrix_fd[0:tau_dim:15, :]
-    return S_matrix_fd, tau_dim
+    return S_matrix_fd
 
 
+'''
+function kappa_residuals
+This function...
 
+Big picture:
+This function...
+
+Visualization:
+None
+'''
+
+
+def fit_kappa(trial, kappa_init_guess, show_graphs):
+    import itertools
+
+    # To do the nonlinear regression, we pass a function to scipy.optimize.fmin and ask it to minimize the output.
+    # calculate_sum_of_squared_residuals computes a numerical score that tells how well the generated S matrix fits the
+    # experimental S matrix by comparing the Z values at three saturation levels (35%, 50%, and 65%).
+    # Compute regression score (sum of squared residuals).
+    def calculate_sum_of_squared_residuals(trial, kappa_guess, show_graphs):
+        # Set up a dict for the generated data. The "guess" refers to the fact that the nonlinear regression algorithm
+        # makes a series of guesses while searching for the minimum.
+        trial_guess = {}
+        # Using finite_difference, generate an S matrix based on the provided kappa.
+        trial_guess['S_matrix'] = finite_difference(trial, kappa_guess)  # NOT trial_guess
+        trial_guess['Z_35'] = find_mean_Z(trial_guess, 0.35, 0)
+        trial_guess['Z_50'] = find_mean_Z(trial_guess, 0.50, 0)
+        trial_guess['Z_65'] = find_mean_Z(trial_guess, 0.65, 0)
+
+        # Double checking that array lengths match, just in case.
+        if not np.array_equal([len(trial['Z_35']), len(trial['Z_50']), len(trial['Z_65'])], [
+                len(trial_guess['Z_35']), len(trial_guess['Z_50']), len(trial_guess['Z_65'])]):
+            print('One or more Z_sat dimensions do not agree between generated and experimental Z_sat arrays.')
+
+        sum_of_squared_residuals = 0
+        for Z_sat in ['Z_35', 'Z_50', 'Z_65']:
+            temp_Z = np.copy(trial[Z_sat])
+            temp_Z_guess = np.copy(trial_guess[Z_sat])
+            # NaN values in the Z_sat array do not affect the regression score, which means that an S matrix yielding
+            # a Z_sat array containing only NaN values will ordinarily produce the lowest (most desirable) score.
+            # However, this would lead the nonlinear regression algorithm to produce a nonsensical, unoptimized kappa
+            # value. In order to prevent this from happening, the NaN values in the experimental Z_sat arrays are
+            # set to zero, as are the corresponding elements of the generated (guess) Z_sat.
+            # The result of this is that at each respective saturation level (Z_35, Z_50, or Z_65) time points are
+            # ignored if the experimental Z_sat data contains an NaN value at that time point. If the generated Z_sat
+            # data contains NaN value at any given time point, the SSR score at that time point is computed as if the
+            # generated Z_sat value was in fact zero.
+            # In addition, NaN values produced in the experimental Z_sat cannot be fixed (can't supply data that isn't
+            # there) so values at these positions are converted to zero in BOTH experimental and generated data.
+            temp_Z[~np.isfinite(temp_Z)] = 0  # Convert experimental NaN values to zero.
+            # Do the same for the corresponding elements in Z_guess, plus convert all Z_guess NaNs to zero.
+            temp_Z_guess[np.bitwise_or(~np.isfinite(trial[Z_sat]), ~np.isfinite(trial_guess[Z_sat]))] = 0
+            # Square the difference between corresponding elements and compute the sum.
+            sum_of_squared_residuals += sum(np.square(temp_Z - temp_Z_guess))
+
+        # for Z_sat, Z_sat_guess in itertools.zip([trial['Z_35'], trial['Z_50'], trial['Z_65']], [trial_guess['Z_35_guess'], trial_guess['Z_50_guess'], trial_guess['Z_65_guess']]):
+        #     for exp, guess in itertools.zip(Z_sat, Z_sat_guess):
+
+        # sum_of_squared_residuals = 1  # finite_difference(trial, kappa_guess)
+        return sum_of_squared_residuals
+
+    # Find the kappa by nonlinear regression.
+    f = lambda k: calculate_sum_of_squared_residuals(trial, k, show_graphs)
+    # def f(k, *args):
+    #     # args[0] should be the trial dict
+    #     # args[1] should be show_graphs
+    #     return calculate_sum_of_squared_residuals(args[0], k, args[1])
+    kappa_fit = sc.optimize.fmin(func=f, x0=kappa_init_guess)#, args=(trial, show_graphs))
+    # kappa_fit = sc.optimize.fmin(func=calculate_sum_of_squared_residuals(trial, k, show_graphs), x0=kappa_init_guess)
+    # kappa_fit = calculate_sum_of_squared_residuals(trial, kappa_init_guess, show_graphs)
+    # kappa_fit = f(3, trial, 0)
+    return kappa_fit
