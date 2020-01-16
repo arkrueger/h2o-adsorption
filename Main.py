@@ -59,19 +59,18 @@ tau_factor = np.divide(flowrate, np.multiply(porosity, bed_volume))
 # For each trial, there is a .csv (2-D) that contains
 configs = ['HFC', 'HFN', 'LFC', 'LFN']
 trials = ['1', '2', '3']
-names = [i + k for i in configs for k in trials]
+trial_name = [i + k for i in configs for k in trials]
 trial_num = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-# names_map = {names[i]: trial_nums[i] for i in trial_nums}
 
 # Dict of dicts to organize data. Outer dict maps the experimental trials, inner dict contains the associated data.
-attributes = dict.fromkeys(['S_matrix', 'trial_num', 'bed_height', 'bed_volume', 'bed_diameter', 'flowrate',
-                            'tau_factor', 'tau_range', 'psi', 'Z_50', 'Z_lower', 'Z_upper', 'kappa'])
+attributes = dict.fromkeys(['S_matrix', 'trial_num', 'trial_name', 'bed_height', 'bed_volume', 'bed_diameter',
+                            'flowrate', 'tau_factor', 'tau_range', 'psi', 'Z_50', 'Z_lower', 'Z_upper', 'kappa'])
 attribute_keys = ['trial_num', 'bed_height', 'bed_volume', 'bed_diameter', 'flowrate', 'tau_factor']
-# Here we iterate through the trial names array (containing the outer dict keys) and the arrays containing the physical
+# Here we iterate through the trial_name array (containing the outer dict keys) and the arrays containing the physical
 # quantities at the same rate and order. The k index is just to access the arrays those quantities are stored in. This
 # ensures that the right quantities are associated with the right trial.
 # That's confusing and there's probably a better way to map it. Change the following line at your own peril.
-data = {names[i]: {k: globals()[k][i] for k in attribute_keys} for i in range(0, 12)}
+data = {trial_name[i]: {k: globals()[k][i] for k in attribute_keys} for i in range(0, 12)}
 
 # Populate the dict with the S matrices from the resource files.
 for trial in data:

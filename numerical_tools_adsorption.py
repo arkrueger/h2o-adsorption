@@ -1,6 +1,9 @@
 import numpy as np
 import scipy as sc
 import scipy.optimize
+from time import sleep
+import plotly.graph_objects as go
+import plotly.offline as plo
 
 '''
 function find_mean_Z
@@ -51,6 +54,43 @@ def find_mean_Z(trial, saturation, show_graphs=0):
     # Leave the NaN values in there. Important to preserve spacing because the index is the time axis.
 
     # TODO graphing component
+    if show_graphs:
+        x_array = np.linspace(0, 100, S_matrix.shape[1])  # % column height on the x axis
+        fig = go.Figure()
+        fig.add_shape()
+        time_point = 0
+        for row in S_matrix[:]:  # Iterate over S matrix rows
+            # Each row of the S matrix was generated from an image of the silica column
+            # title includes info about which trial and config is being analyzed
+            # construct a graph showing S vs Z
+            # highlight selected values
+            # place a line showing the average Z-position
+            # highlight tolerance region
+            #   pause
+            # continue for the next one
+
+            # Recording the points that fall within tolerance of desired saturation.
+            selected_points = np.argwhere(abs(row - saturation) < tolerance)
+            row_wise_Z = np.mean(selected_points) / S_matrix.shape[1]
+
+            row *= 100
+
+            # Constructing the graph.
+            fig.add_trace(go.Scatter(x=x_array, y=row, name='All Data'))
+            fig.add_trace(go.Scatter(x=x_array[selected_points], y=row[selected_points], name='Selected Points'))
+            fig.add_trace(go.Scatter(x=row_wise_Z, y=[0, 100], name='Mean Z'))
+            fig.update_layout(shapes=[go.layout.Shape(type='rect', xref='x', yref='y', x0=0, x1=100,
+                                                      y0=saturation - tolerance, y1=saturation + tolerance,
+                                                      fillcolor='blue', opacity=0.5, layer='below', line_width=0)])
+            fig.update_layout(title=trial['trial_name'] + '\nTime = ' + time_point + ' minutes',
+                              xaxis_title='Z (% column height)', yaxis_title='S (% saturation)')
+            sleep(0.25)
+
+            time_point += 0.25
+
+        # Show all Z points vs time.
+
+
     # For the graphing, keep the non-dimensional scaled Z
     # BUT just use frames or minutes for the time axis because it communicates what is happening more clearly than
     # tau does
