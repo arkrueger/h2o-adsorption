@@ -2,8 +2,8 @@ import numpy as np
 import scipy as sc
 import scipy.optimize
 from time import sleep
-import plotly.graph_objects as go
-import plotly.offline as plo
+import matplotlib
+import matplotlib.pyplot as plt
 
 '''
 function find_mean_Z
@@ -53,53 +53,56 @@ def find_mean_Z(trial, saturation, show_graphs=0):
     mean_Z = np.array([np.mean(np.argwhere(abs(row - saturation) < tolerance)) for row in S_matrix]) / S_matrix.shape[1]
     # Leave the NaN values in there. Important to preserve spacing because the index is the time axis.
 
-    # TODO graphing component
     if show_graphs:
+        time_point = 0.0
         x_array = np.linspace(0, 100, S_matrix.shape[1])  # % column height on the x axis
-        fig = go.Figure()
-        fig.add_shape()
-        time_point = 0
-        for row in S_matrix[:]:  # Iterate over S matrix rows
-            # Each row of the S matrix was generated from an image of the silica column
-            # title includes info about which trial and config is being analyzed
-            # construct a graph showing S vs Z
-            # highlight selected values
-            # place a line showing the average Z-position
-            # highlight tolerance region
-            #   pause
-            # continue for the next one
+        plt.axis([0, 100, 0, 100])
+        plt.xlabel('Z (% column height)', size=20)
+        plt.ylabel('S (% saturation)', size=20)
+        # Initialize plot lines with meaningless data that is not displayed.
+        init_ydata = np.full(x_array.shape[0], -1)
+        all_points_line, = plt.plot(x_array, init_ydata, '.', label='All Data', color='b')
+        selected_points_line, = plt.plot(x_array, init_ydata, '.', label='Selected Points', color='r')
+        mean_Z_line = plt.axvline(-1, 0, 100, label='Mean Z')  # This will be the vertical line marking mean_Z.
+        # Recall mean_Z is a scalar, the vertical line is just for visualization.
+        plt.figlegend(prop={'size': 20})
+        # Highlight the boundary of selected values.
+        plt.axhspan((saturation - tolerance) * 100, (saturation + tolerance) * 100, color='b', alpha=0.5)
+        # Set window size and making the figure window pop up in front.
+        fig = plt.gcf()
+        fig.set_size_inches(20, 15)
+        window = plt.get_current_fig_manager().window
+        window.activateWindow()
+        window.raise_()
+        # The comma after each respective "line" above is necessary because plt.plot returns a list.
+        for each in S_matrix[:]:  # Iterate over S matrix rows
+            row = np.copy(each)
 
-            # Recording the points that fall within tolerance of desired saturation.
-            selected_points = np.argwhere(abs(row - saturation) < tolerance)
-            row_wise_Z = np.mean(selected_points) / S_matrix.shape[1]
+            # Record the points that fall within tolerance of desired saturation.
+            selected_points_idx = np.argwhere(abs(row - saturation) < tolerance)
+            selected_points_x = x_array[selected_points_idx]
+            selected_points_y = row[selected_points_idx] * 100
+            # Average Z for this time step (this is a scalar).
+            row_wise_Z = np.mean(selected_points_x)
 
-            row *= 100
+            row *= 100  # The y-axis is percent saturation so we need to scale the values before plotting.
 
             # Constructing the graph.
-            fig.add_trace(go.Scatter(x=x_array, y=row, name='All Data'))
-            fig.add_trace(go.Scatter(x=x_array[selected_points], y=row[selected_points], name='Selected Points'))
-            fig.add_trace(go.Scatter(x=row_wise_Z, y=[0, 100], name='Mean Z'))
-            fig.update_layout(shapes=[go.layout.Shape(type='rect', xref='x', yref='y', x0=0, x1=100,
-                                                      y0=saturation - tolerance, y1=saturation + tolerance,
-                                                      fillcolor='blue', opacity=0.5, layer='below', line_width=0)])
-            fig.update_layout(title=trial['trial_name'] + '\nTime = ' + time_point + ' minutes',
-                              xaxis_title='Z (% column height)', yaxis_title='S (% saturation)')
-            sleep(0.25)
+            all_points_line.set_ydata(row)
+            # Need to set both y AND x data for selected points because the shape of the data changes each iteration.
+            selected_points_line.set_xdata(selected_points_x)
+            selected_points_line.set_ydata(selected_points_y)
+            mean_Z_line.set_xdata(row_wise_Z)  # Draw vertical line corresponding to mean_Z.
+            plt.title(trial['trial_name'] + '\nTime = ' + str(time_point) + ' minutes', size=20)
+            plt.axis([0, 100, 0, 100])  # Necessary in case the user closed the window mid-execution.
+
+            plt.pause(0.25)
 
             time_point += 0.25
 
-        # Show all Z points vs time.
+        plt.close()
 
-
-    # For the graphing, keep the non-dimensional scaled Z
-    # BUT just use frames or minutes for the time axis because it communicates what is happening more clearly than
-    # tau does
-    # if show_graphs == 1:
-    # print('test')
-    # do graphing
-
-    # TODO consider having an if statement that toggles between the long way to get mean_Z and the concise one
-    #  depending if show_graphs is selected
+        # TODO Show all Z points vs time.
 
     return mean_Z
 

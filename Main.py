@@ -60,12 +60,14 @@ tau_factor = np.divide(flowrate, np.multiply(porosity, bed_volume))
 configs = ['HFC', 'HFN', 'LFC', 'LFN']
 trials = ['1', '2', '3']
 trial_name = [i + k for i in configs for k in trials]
+cowabunga = [1, 11, 21, 31, 41, 51, 61, 71, 81, 91, 101, 111]  #[i + k for i in configs for k in trials]
 trial_num = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
 # Dict of dicts to organize data. Outer dict maps the experimental trials, inner dict contains the associated data.
 attributes = dict.fromkeys(['S_matrix', 'trial_num', 'trial_name', 'bed_height', 'bed_volume', 'bed_diameter',
                             'flowrate', 'tau_factor', 'tau_range', 'psi', 'Z_50', 'Z_lower', 'Z_upper', 'kappa'])
-attribute_keys = ['trial_num', 'bed_height', 'bed_volume', 'bed_diameter', 'flowrate', 'tau_factor']
+# If the variable or object already exists, its name is placed here to set up the data dict by comprehension notation.
+attribute_keys = ['trial_num', 'trial_name', 'bed_height', 'bed_volume', 'bed_diameter', 'flowrate', 'tau_factor']
 # Here we iterate through the trial_name array (containing the outer dict keys) and the arrays containing the physical
 # quantities at the same rate and order. The k index is just to access the arrays those quantities are stored in. This
 # ensures that the right quantities are associated with the right trial.
