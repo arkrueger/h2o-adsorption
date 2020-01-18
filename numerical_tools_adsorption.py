@@ -41,7 +41,6 @@ def find_mean_Z(trial, saturation, show_graphs=0):
 
     # Returns:
     # mean_Z, An array containing a series of Z-values (length: number of time points of given trial)
-    # fit, an array containing the polynomial coefficients from the (linear) fit made to the Z vs. tau plot
 
     # We're not editing the S_matrix, so we can give it a new name for code readability.
     S_matrix = trial['S_matrix']
