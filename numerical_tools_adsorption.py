@@ -51,11 +51,13 @@ def find_mean_Z(trial, saturation, show_graphs=0):
     # Note: we aren't interested in the saturation values directly here, but the Z values. That's why the index is
     # used, because the x2 index represents z-position (technically, pixels).
     mean_Z = np.array([np.mean(np.argwhere(abs(row - saturation) < tolerance)) for row in S_matrix]) / S_matrix.shape[1]
+    std_Z = np.array([np.std(np.argwhere(abs(row - saturation) < tolerance)) for row in S_matrix]) / S_matrix.shape[1]
     # Leave the NaN values in there. Important to preserve spacing because the index is the time axis.
 
     if show_graphs:
         time_point = 0.0
         x_array = np.linspace(0, 100, S_matrix.shape[1])  # % column height on the x axis
+        fig = plt.figure()
         plt.axis([0, 100, 0, 100])
         plt.xlabel('Z (% column height)', size=20)
         plt.ylabel('S (% saturation)', size=20)
@@ -66,10 +68,10 @@ def find_mean_Z(trial, saturation, show_graphs=0):
         mean_Z_line = plt.axvline(-1, 0, 100, label='Mean Z')  # This will be the vertical line marking mean_Z.
         # Recall mean_Z is a scalar, the vertical line is just for visualization.
         plt.figlegend(prop={'size': 20})
+        fig.axes[0].tick_params(labelsize=20)
         # Highlight the boundary of selected values.
         plt.axhspan((saturation - tolerance) * 100, (saturation + tolerance) * 100, color='b', alpha=0.5)
-        # Set window size and making the figure window pop up in front.
-        fig = plt.gcf()
+        # Set window size and make the figure window pop up in front.
         fig.set_size_inches(20, 15)
         window = plt.get_current_fig_manager().window
         window.activateWindow()
@@ -100,9 +102,32 @@ def find_mean_Z(trial, saturation, show_graphs=0):
 
             time_point += 0.25
 
+        plt.pause(0.75)  # Pause a bit longer before closing the figure.
         plt.close()
 
-        # TODO Show all Z points vs time.
+        # Show all Z points vs time.
+        mean_Z_scaled = mean_Z * 100
+        std_Z_scaled = std_Z * 100
+        x_array_summary = np.linspace(0, (S_matrix.shape[0] - 1) / 4, S_matrix.shape[0])
+        fig_summary = plt.figure()
+        plt.axis([-0.25, 0.25 + x_array_summary[-1], 0, 100])  # Keep xlim bounds to dataset range + 1.
+        plt.xlabel('Time (minutes)', size=20)
+        plt.ylabel('Z (% column height)', size=20)
+        plt.title('Mean Z Over Time', size=20)
+        # plt.plot(x_array_summary, mean_Z_scaled, 'o', label='Mean Z', color='b')
+        plt.errorbar(x_array_summary, mean_Z_scaled, yerr=std_Z_scaled, marker='o', linestyle='', color='b',
+                     label='Mean Z', capsize=5)
+        # Recall mean_Z is a scalar, the vertical line is just for visualization.
+        plt.figlegend(prop={'size': 20})
+        fig_summary.axes[0].tick_params(labelsize=20)
+        # Set window size and make the figure window pop up in front.
+        fig_summary.set_size_inches(20, 15)
+        window = plt.get_current_fig_manager().window
+        window.activateWindow()
+        window.raise_()
+
+        plt.pause(3)
+        plt.close()
 
     return mean_Z
 
