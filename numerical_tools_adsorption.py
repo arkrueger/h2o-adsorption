@@ -94,7 +94,7 @@ def find_mean_Z(trial, saturation, show_graphs=0):
             selected_points_line.set_xdata(selected_points_x)
             selected_points_line.set_ydata(selected_points_y)
             mean_Z_line.set_xdata(row_wise_Z)  # Draw vertical line corresponding to mean_Z.
-            plt.title(trial['trial_name'] + '\nTime = ' + str(time_point) + ' minutes', size=20)
+            plt.title('Finding Mean Z for ' + trial['trial_name'] + '\nTime = ' + str(time_point) + ' minutes', size=20)
             plt.axis([0, 100, 0, 100])  # Necessary in case the user closed the window mid-execution.
 
             plt.pause(0.25)
@@ -112,7 +112,7 @@ def find_mean_Z(trial, saturation, show_graphs=0):
         plt.axis([-0.25, 0.25 + x_array_summary[-1], 0, 100])  # Keep xlim bounds to dataset range + 1.
         plt.xlabel('Time (minutes)', size=20)
         plt.ylabel('Z (% column height)', size=20)
-        plt.title('Mean Z Over Time', size=20)
+        plt.title('Mean Z Over Time for' + trial['trial_name'], size=20)
         # plt.plot(x_array_summary, mean_Z_scaled, 'o', label='Mean Z', color='b')
         plt.errorbar(x_array_summary, mean_Z_scaled, yerr=std_Z_scaled, marker='o', linestyle='', color='b',
                      label='Mean Z', capsize=5)
@@ -221,7 +221,7 @@ def fit_kappa(trial, kappa_init_guess, show_graphs):
         # makes a series of guesses while searching for the minimum.
         trial_guess = {}
         # Using finite_difference, generate an S matrix based on the provided kappa.
-        trial_guess['S_matrix'] = finite_difference(trial, kappa_guess)  # NOT trial_guess
+        trial_guess['S_matrix'] = finite_difference(trial, kappa_guess[0])  # NOT trial_guess
         trial_guess['Z_35'] = find_mean_Z(trial_guess, 0.35, 0)
         trial_guess['Z_50'] = find_mean_Z(trial_guess, 0.50, 0)
         trial_guess['Z_65'] = find_mean_Z(trial_guess, 0.65, 0)
@@ -230,6 +230,10 @@ def fit_kappa(trial, kappa_init_guess, show_graphs):
         if not np.array_equal([len(trial['Z_35']), len(trial['Z_50']), len(trial['Z_65'])], [
                 len(trial_guess['Z_35']), len(trial_guess['Z_50']), len(trial_guess['Z_65'])]):
             print('One or more Z_sat dimensions do not agree between generated and experimental Z_sat arrays.')
+
+        if show_graphs:
+            Z_sum = np.zeros(trial['Z_50'].shape[0])
+            Z_sum_guess = np.copy(Z_sum)
 
         sum_of_squared_residuals = 0
         for Z_sat in ['Z_35', 'Z_50', 'Z_65']:
@@ -252,10 +256,70 @@ def fit_kappa(trial, kappa_init_guess, show_graphs):
             # Square the difference between corresponding elements and compute the sum.
             sum_of_squared_residuals += sum(np.square(temp_Z - temp_Z_guess))
 
+            if show_graphs:
+                Z_sum += temp_Z
+                Z_sum_guess += temp_Z_guess
+
+        if show_graphs:
+            x_array = np.linspace(0, (Z_sum.shape[0] - 1) / 4, Z_sum.shape[0])
+            # Sum(Z) values that are 0 indicate all (Z_35, Z_50, and Z_65) values at that position were NaN, so
+            # convert back to NaN so that they are not graphed.
+            Z_sum[np.argwhere(Z_sum == 0)] = np.nan
+            Z_sum_guess[np.argwhere(Z_sum_guess == 0)] = np.nan
+
+            fig = plt.gcf()
+            ax1 = fig.axes[0]
+            ax2 = fig.axes[1]
+
+            plt.sca(ax1)
+            plt.cla()
+            ax1.set_title('Trial: ' + trial['trial_name'] + '\nKappa = ' + "{:.3f}".format(kappa_guess[0]), size=20)
+            ax1.set_xlabel('Time (minutes)', size=20)
+            ax1.set_ylabel('Sum of Z_35, Z_50, and Z_65 (fractional)', size=20)
+            plt.plot(x_array, Z_sum, 'bo', label='Experimental Values', mfc='none')
+            plt.plot(x_array, Z_sum_guess, 'ro', label='Regression Guess', mfc='none')
+            ax1.legend(prop={'size': 20})
+            ax1.tick_params(labelsize=20)
+
+            plt.sca(ax2)
+            plt.cla()
+            ax2.set_title('Sum of Squared Residuals = ' + "{:.3f}".format(sum_of_squared_residuals), size=20)
+            ax2.set_xlabel('Time (minutes)\n\n', size=20)
+            ax2.set_ylabel('Residual', size=20)
+            markerline, stemlines, baseline = plt.stem(x_array, Z_sum - Z_sum_guess, use_line_collection=True)
+            markerline.set_markerfacecolor('none')
+            ax2.tick_params(labelsize=20)
+
+            plt.pause(0.25)
+
         return sum_of_squared_residuals
+
+    # Set up graph so that the scoring function can access it.
+    # Two-plot figure.
+    # Top plot shows the sum of the Z_35, Z_50, and Z_65 arrays for experimental and Z_guess.
+    # Lower plot shows the residuals and displays the sum of the squared residuals.
+    fig = plt.figure()
+    ax1 = plt.subplot(2, 1, 1)
+    ax2 = plt.subplot(2, 1, 2)
+    fig.tight_layout(pad=3.0)
+    ax1.set_xlabel('Time (minutes)', size=20)
+    ax1.set_ylabel('Sum of Z_35, Z_50, and Z_65 (fractional)', size=20)
+    ax1.autoscale()
+
+    ax2.set_xlabel('Time (minutes)', size=20)
+    ax2.set_ylabel('Residual', size=20)
+    ax2.autoscale()
+
+    fig.set_size_inches(20, 15)
+    window = plt.get_current_fig_manager().window
+    window.activateWindow()
+    window.raise_()
 
     # Find the kappa by nonlinear regression.
     f = lambda k: calculate_sum_of_squared_residuals(trial, k, show_graphs)
     kappa_fit = sc.optimize.fmin(func=f, x0=kappa_init_guess)
+
+    plt.pause(2)
+    plt.close(fig)
 
     return kappa_fit

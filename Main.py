@@ -46,7 +46,7 @@ bed_diameter = np.array([[6.75, 6.75, 6.75], [6.75, 6.57, 6.57], [6.59, 6.59, 6.
                          [6.37, 6.37, 6.37]]).flatten() / 1000  # meters
 flowrate = np.array([[6.2, 6.6, 7.2], [6.0, 6.3, 6.7], [2.0, 2.0, 2.0], [2.0, 2.0, 2.0]]).flatten() / 6E4  # m^3 / s
 R = 8.206E-5  # m3*atm*K&^-1?mol^-1
-T = 273.15 + 24  # Kelvin, assumed constant
+temp = np.array([297, 299, 299, 307, 308, 308, 293, 292, 292, 302, 305, 306])  # Kelvin
 porosity = 0.74
 delta_t = 15  # seconds (every 15 seconds, an image was taken of the silica column)
 # tau_factor is used to convert time to the dimensionless tau.
@@ -80,7 +80,7 @@ for trial in data:
     data[trial]['porosity'] = porosity
 
 ### Analysis
-# Extracting psi values.
+# Extracting psi values and collecting Z_35, Z_50, and Z_65.
 for i in data:
     # Temporary reference to the current trial to make code more readable.
     trial = data[i]
@@ -101,6 +101,12 @@ for i in data:
 
 # This could all be lumped into a single loop. Here I'm breaking it up into two loops in the interest of displaying
 # similar graphs together.
+# Fit kappa.
+for i in data:
+    # Temporary reference to the current trial to make code more readable.
+    trial = data[i]
+    trial['kappa'] = nta.fit_kappa(trial, 4, show_graphs=1)
 
+# TODO Plot Petrovic-Thodos correlation.
 
 
