@@ -60,7 +60,6 @@ tau_factor = np.divide(flowrate, np.multiply(porosity, bed_volume))
 configs = ['HFC', 'HFN', 'LFC', 'LFN']
 trials = ['1', '2', '3']
 trial_name = [i + k for i in configs for k in trials]
-cowabunga = [1, 11, 21, 31, 41, 51, 61, 71, 81, 91, 101, 111]  #[i + k for i in configs for k in trials]
 trial_num = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
 # Dict of dicts to organize data. Outer dict maps the experimental trials, inner dict contains the associated data.
