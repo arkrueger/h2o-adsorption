@@ -89,7 +89,7 @@ for i in data:
 
     # find_mean_Z to get the average Z position at each time step where saturation was 50% (call this Z_50).
     # (Capital Z denotes the dimensionless scaled value, as opposed to lowercase z, which is pixels.)
-    trial['Z_50'] = nta.find_mean_Z(trial, 0.5, show_graphs=1)
+    trial['Z_50'] = nta.find_mean_Z(trial, 0.5, show_graphs=0)
 
     # psi is the slope of Z_50 vs. tau, so find a linear fit using only the finite values (there are typically NaNs).
     idx = np.isfinite(trial['Z_50'])
@@ -104,7 +104,7 @@ for i in data:
 for i in data:
     # Temporary reference to the current trial to make code more readable.
     trial = data[i]
-    trial['kappa'] = nta.fit_kappa(trial, 4, show_graphs=1)
+    trial['kappa'] = nta.fit_kappa(trial, 4, show_graphs=0)
 
 # TODO Plot Petrovic-Thodos correlation.
 

@@ -112,7 +112,7 @@ def find_mean_Z(trial, saturation, show_graphs=0):
         plt.axis([-0.25, 0.25 + x_array_summary[-1], 0, 100])  # Keep xlim bounds to dataset range + 1.
         plt.xlabel('Time (minutes)', size=20)
         plt.ylabel('Z (% column height)', size=20)
-        plt.title('Mean Z Over Time for' + trial['trial_name'], size=20)
+        plt.title('Mean Z Over Time for ' + trial['trial_name'], size=20)
         # plt.plot(x_array_summary, mean_Z_scaled, 'o', label='Mean Z', color='b')
         plt.errorbar(x_array_summary, mean_Z_scaled, yerr=std_Z_scaled, marker='o', linestyle='', color='b',
                      label='Mean Z', capsize=5)
@@ -298,28 +298,30 @@ def fit_kappa(trial, kappa_init_guess, show_graphs):
     # Two-plot figure.
     # Top plot shows the sum of the Z_35, Z_50, and Z_65 arrays for experimental and Z_guess.
     # Lower plot shows the residuals and displays the sum of the squared residuals.
-    fig = plt.figure()
-    ax1 = plt.subplot(2, 1, 1)
-    ax2 = plt.subplot(2, 1, 2)
-    fig.tight_layout(pad=3.0)
-    ax1.set_xlabel('Time (minutes)', size=20)
-    ax1.set_ylabel('Sum of Z_35, Z_50, and Z_65 (fractional)', size=20)
-    ax1.autoscale()
+    if show_graphs:
+        fig = plt.figure()
+        ax1 = plt.subplot(2, 1, 1)
+        ax2 = plt.subplot(2, 1, 2)
+        fig.tight_layout(pad=3.0)
+        ax1.set_xlabel('Time (minutes)', size=20)
+        ax1.set_ylabel('Sum of Z_35, Z_50, and Z_65 (fractional)', size=20)
+        ax1.autoscale()
 
-    ax2.set_xlabel('Time (minutes)', size=20)
-    ax2.set_ylabel('Residual', size=20)
-    ax2.autoscale()
+        ax2.set_xlabel('Time (minutes)', size=20)
+        ax2.set_ylabel('Residual', size=20)
+        ax2.autoscale()
 
-    fig.set_size_inches(20, 15)
-    window = plt.get_current_fig_manager().window
-    window.activateWindow()
-    window.raise_()
+        fig.set_size_inches(20, 15)
+        window = plt.get_current_fig_manager().window
+        window.activateWindow()
+        window.raise_()
 
     # Find the kappa by nonlinear regression.
     f = lambda k: calculate_sum_of_squared_residuals(trial, k, show_graphs)
     kappa_fit = sc.optimize.fmin(func=f, x0=kappa_init_guess)
 
-    plt.pause(2)
-    plt.close(fig)
+    if show_graphs:
+        plt.pause(2)
+        plt.close(fig)
 
     return kappa_fit
