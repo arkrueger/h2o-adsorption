@@ -6,15 +6,17 @@ Fitting process parameters using finite difference and nonlinear regression.
 
 Here's a short one if you're interested. I originally did this project in MATLAB but rewrote it in Python.
 
+Step 0: Wonder what kappa is for water adsorption on silica in a packed column. What's kappa? It's uh... the mass transfer coefficient. Or something. 
+
 Step 1: Get silica column with color changing beads (orange -> white).
 
 Step 2: Humidify air.
 
 Step 3: Blow humidified air through silica column.
 
-Step 4: Forget to turn the camera on and realize you have to set up the experiment again.
+Step 4: Forget to turn the videocamera on and realize you have to set up the experiment again.
 
-Step 5: Turn the camera on before starting the air flow.
+Step 5: Turn the videocamera on before starting the air flow.
 
 Step 6: Stop recording once the column has completed the color change.
 
@@ -26,7 +28,7 @@ Step 9: Do a bunch of math stuff. Construct a finite difference model from a bun
 
 Step 9.5: Reflect on the pain caused by Step 9. Sticks and stones _may_ break my bones but MATLAB will _always_ hurt me.
 
-Step 10: Present findings, finish the class, and graduate college.
+Step 10: Celebrate having found the mass transfer coefficient, present findings, and graduate college.
 
 ![image](https://user-images.githubusercontent.com/54046534/115321378-87971c80-a138-11eb-819c-32dc539610d7.png)
 ![image](https://user-images.githubusercontent.com/54046534/115322474-fecdb000-a13a-11eb-8b84-97cda945d79a.png)
