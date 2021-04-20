@@ -29,6 +29,8 @@ Step 9.5: Reflect on the pain caused by Step 9. Sticks and stones _may_ break my
 Step 10: Present findings, finish the class, and graduate college.
 
 ![image](https://user-images.githubusercontent.com/54046534/115321378-87971c80-a138-11eb-819c-32dc539610d7.png)
+![image](https://user-images.githubusercontent.com/54046534/115322474-fecdb000-a13a-11eb-8b84-97cda945d79a.png)
+
 
 
 And here's a snippet of the original MATLAB code before I rewrote it in Python. 
