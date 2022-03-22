@@ -5,7 +5,7 @@ I originally did this project in MATLAB but rewrote it in Python for my sanity.
 
 The adsorption of water vapor onto silica can be modeled by a system of partial differential equations, whose critical parameter is the mass transfer coefficient, kappa.
 
-Here is a brief overview of the analysis.
+## Analysis Overview
 
 Step 0: Define the problem. What is the mass transfer coefficient (kappa) for water adsorption on silica in a packed column?
 
@@ -24,6 +24,8 @@ Step 7: Time for math. Construct a finite difference model from a system of part
 Step 8: Reflect on the pain caused by Step 7. Sticks and stones _may_ break my bones but MATLAB will _always_ hurt me.
 
 Step 9: Rewrite the project in Python.
+
+## Figures
 
 ![image](https://user-images.githubusercontent.com/54046534/115321378-87971c80-a138-11eb-819c-32dc539610d7.png)
 ![image](https://user-images.githubusercontent.com/54046534/115322474-fecdb000-a13a-11eb-8b84-97cda945d79a.png)
