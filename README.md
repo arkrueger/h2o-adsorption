@@ -26,8 +26,9 @@ Step 8: Reflect on the pain caused by Step 7. Sticks and stones _may_ break my b
 Step 9: Rewrite the project in Python.
 
 ## Figures
-
+### Silica column undergoing the color change
 ![image](https://user-images.githubusercontent.com/54046534/115321378-87971c80-a138-11eb-819c-32dc539610d7.png)
+### Visualization of a single step in the nonlinear regression function
 ![image](https://user-images.githubusercontent.com/54046534/115322474-fecdb000-a13a-11eb-8b84-97cda945d79a.png)
 
 
